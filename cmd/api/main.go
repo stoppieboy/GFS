@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/stoppieboy/gfs/internal/config"
+	"github.com/stoppieboy/gfs/internal/logger"
+	"github.com/stoppieboy/gfs/internal/server"
 	"github.com/stoppieboy/gfs/routers"
 )
 
@@ -28,4 +31,10 @@ func main() {
 	routers.WebServiceRoutes(WebServiceRouter)
 
 	http.ListenAndServe(":3000", router)
+
+	// gin
+	cfg := config.Load()
+	logger := logger.New(cfg.Env)
+	s := server.New(cfg, logger)
+	s.Start()
 }
