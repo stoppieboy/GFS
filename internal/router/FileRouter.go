@@ -2,17 +2,17 @@ package router
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stoppieboy/gfs/internal/config"
+	"github.com/stoppieboy/gfs/internal/service"
 	"go.uber.org/zap"
 )
 
 var (
 	log *zap.SugaredLogger
 	c   *config.Config
+	s   service.FileService
 )
 
 func uploadHandler(ctx *gin.Context) {
@@ -23,35 +23,48 @@ func uploadHandler(ctx *gin.Context) {
 		return
 	}
 
-	uploadDir := "uploads"
-	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		err = os.MkdirAll(uploadDir, os.ModePerm)
-		if err != nil {
-			log.Errorf("Failed to create upload directory: %v", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare upload directory"})
-			return
-		}
-	}
-
-	dst := filepath.Join(file.Filename)
-	if err := ctx.SaveUploadedFile(file, dst); err != nil {
+	path, err := s.Save(file)
+	if err != nil {
 		log.Errorf("Failed to save file: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	log.Infof("File uploaded: %s", dst)
-	ctx.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "Path": dst})
+	log.Infof("File uploaded: %s", path)
+	ctx.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "Path": path})
 }
 
 func downloadHandler(ctx *gin.Context) {
-	
+	filename := ctx.Param("filename")
+	filepath, err := s.Get(filename)
+	if err != nil {
+		log.Errorf("File not found: %v", err)
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	ctx.File(filepath)
 }
 
-func RegisterFileRoutes(r *gin.Engine, cfg *config.Config, logger *zap.SugaredLogger) {
+func deleteHandler(ctx *gin.Context) {
+	filename := ctx.Param("filename")
+	err := s.Delete(filename)
+	if err != nil {
+		log.Warnf("Failed to delete the file: %v", err)
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "File not found or failed to delete"})
+		return
+	}
+
+	log.Infof("File deleted: %s", filename)
+	ctx.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
+}
+
+func RegisterFileRoutes(r *gin.Engine, cfg *config.Config, logger *zap.SugaredLogger, fileService service.FileService) {
 	log = logger
 	c = cfg
+	s = fileService
 	router := r.Group("/file")
-	router.GET("/upload", uploadHandler)
-	router.GET("/download", downloadHandler)
+	router.POST("/", uploadHandler)
+	router.GET("/:filename", downloadHandler)
+	router.DELETE("/:filename", deleteHandler)
 }

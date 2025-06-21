@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stoppieboy/gfs/internal/config"
 	"github.com/stoppieboy/gfs/internal/router"
+	"github.com/stoppieboy/gfs/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -12,6 +13,10 @@ type Server struct {
 	router *gin.Engine
 	log    *zap.SugaredLogger
 }
+
+var(
+	uploadDir = "uploads"
+)
 
 func New(cfg *config.Config, logger *zap.SugaredLogger) *Server {
 	s := &Server{
@@ -24,7 +29,12 @@ func New(cfg *config.Config, logger *zap.SugaredLogger) *Server {
 }
 
 func (s Server) routes() {
-	router.RegisterFileRoutes(s.router, s.config, s.log)
+	fileService, err := service.NewFileService(uploadDir)
+	if err != nil {
+		s.log.Errorf("Failed to create file service: %v", err)
+		return
+	}
+	router.RegisterFileRoutes(s.router, s.config, s.log, fileService)
 }
 
 func (s Server) Start() {
