@@ -1,6 +1,6 @@
 package controllers
 
-func getSomething() {
+func Upload() {
 
 }
 

@@ -21,11 +21,11 @@ func getProduct(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	router := mux.NewRouter()
-	oneRouter := router.PathPrefix("/api/one").Subrouter()
-	twoRouter := router.PathPrefix("/api/two").Subrouter()
+	ApiRouter := router.PathPrefix("/api").Subrouter()
+	WebServiceRouter := router.PathPrefix("/web").Subrouter()
 
-	routers.OneRoutes(oneRouter)
-	routers.TwoRoutes(twoRouter)
+	routers.ApiRoutes(ApiRouter)
+	routers.WebServiceRoutes(WebServiceRouter)
 
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(":3000", router)
 }
