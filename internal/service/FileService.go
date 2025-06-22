@@ -1,6 +1,7 @@
 package service
 
 import (
+	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -46,6 +47,19 @@ func (f fileService) Delete(filename string) error {
 	return os.Remove(path)
 }
 
-func SaveUploadedFile(file *multipart.FileHeader, dst string) error {
-	return os.WriteFile(dst, []byte{}, 0644)
+func SaveUploadedFile(fh *multipart.FileHeader, dst string) error {
+	file, err := fh.Open()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, file)
+	return err
 }

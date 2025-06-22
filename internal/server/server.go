@@ -24,6 +24,10 @@ func New(cfg *config.Config, logger *zap.SugaredLogger) *Server {
 		log: logger,
 		router: gin.Default(),
 	}
+	//load html templates
+	s.router.LoadHTMLGlob("templates/*")
+	//load static content
+	s.router.Static("/static", "./static")
 	s.routes()
 	return s
 }
@@ -35,6 +39,7 @@ func (s Server) routes() {
 		return
 	}
 	router.RegisterFileRoutes(s.router, s.config, s.log, fileService)
+	router.RegisterFrontend(s.router, s.log)
 }
 
 func (s Server) Start() {

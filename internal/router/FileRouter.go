@@ -31,7 +31,14 @@ func uploadHandler(ctx *gin.Context) {
 	}
 
 	log.Infof("File uploaded: %s", path)
-	ctx.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "Path": path})
+	// ctx.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "Path": path})
+	filepath, err := s.Get(file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "File not found"})
+		return
+	}
+	log.Infof("here: %s", filepath)
+	ctx.File(filepath)
 }
 
 func downloadHandler(ctx *gin.Context) {
