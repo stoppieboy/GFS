@@ -66,11 +66,10 @@ func deleteHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
 }
 
-func RegisterFileRoutes(r *gin.Engine, cfg *config.Config, logger *zap.SugaredLogger, fileService service.FileService) {
+func RegisterFileRoutes(router *gin.RouterGroup, cfg *config.Config, logger *zap.SugaredLogger, fileService service.FileService) {
 	log = logger
 	c = cfg
 	s = fileService
-	router := r.Group("/file")
 	router.POST("/", uploadHandler)
 	router.GET("/:filename", downloadHandler)
 	router.DELETE("/:filename", deleteHandler)

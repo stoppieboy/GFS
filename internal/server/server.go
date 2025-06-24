@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/stoppieboy/gfs/internal/config"
+	"github.com/stoppieboy/gfs/internal/middleware"
 	"github.com/stoppieboy/gfs/internal/router"
 	"github.com/stoppieboy/gfs/internal/service"
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ type Server struct {
 
 var(
 	uploadDir = "uploads"
+	secret = "secret"
 )
 
 func New(cfg *config.Config, logger *zap.SugaredLogger) *Server {
@@ -38,7 +40,13 @@ func (s Server) routes() {
 		s.log.Errorf("Failed to create file service: %v", err)
 		return
 	}
-	router.RegisterFileRoutes(s.router, s.config, s.log, fileService)
+	authService := service.NewAuthService(secret)
+	router.RegisterAuthRoutes(s.router, s.log, authService)
+
+	authMiddleware := middleware.JWTMiddleware(authService)
+	authGroup := s.router.Group("/file")
+	authGroup.Use(authMiddleware)
+	router.RegisterFileRoutes(authGroup, s.config, s.log, fileService)
 	router.RegisterFrontend(s.router, s.log)
 }
 
