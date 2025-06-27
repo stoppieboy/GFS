@@ -30,7 +30,7 @@ func RegisterAuthRoutes(r *gin.Engine, log *zap.SugaredLogger, authService servi
 		ctx.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
-	r.GET("/login", func(ctx *gin.Context) {
+	r.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(200, "auth.html", gin.H{})
 	})
 }

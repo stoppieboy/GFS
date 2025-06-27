@@ -38,6 +38,7 @@ func uploadHandler(ctx *gin.Context) {
 		return
 	}
 	log.Infof("here: %s", filepath)
+	// ctx.JSON(http.StatusOK, gin.H{"message": "file uploaded successfully"})
 	ctx.File(filepath)
 }
 

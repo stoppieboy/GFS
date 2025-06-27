@@ -43,7 +43,7 @@ func (s Server) routes() {
 	authService := service.NewAuthService(secret)
 	router.RegisterAuthRoutes(s.router, s.log, authService)
 
-	authMiddleware := middleware.JWTMiddleware(authService)
+	authMiddleware := middleware.JWTMiddleware(authService, s.log)
 	authGroup := s.router.Group("/file")
 	authGroup.Use(authMiddleware)
 	router.RegisterFileRoutes(authGroup, s.config, s.log, fileService)
